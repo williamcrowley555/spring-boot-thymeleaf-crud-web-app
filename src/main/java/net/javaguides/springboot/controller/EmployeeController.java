@@ -19,7 +19,7 @@ public class EmployeeController {
 
     @GetMapping("/")
     public String viewHomePage(Model model) {
-        return findPaginated(1,  "firstName", "asc", model);
+        return findPaginated(model, 1,  "firstName", "asc", null);
     }
 
     @GetMapping("/showNewEmployeeForm")
@@ -36,7 +36,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/showFormForUpdate/{id}")
-    public String showFormForUpdate(@PathVariable(value = "id") Long id, Model model) {
+    public String showFormForUpdate(Model model, @PathVariable(value = "id") Long id) {
         Employee employee = employeeService.getEmployeeById(id);
         model.addAttribute("employee", employee);
         return "update_employee";
@@ -49,17 +49,16 @@ public class EmployeeController {
     }
 
     @GetMapping("/page/{pageNo}")
-    public String findPaginated(@PathVariable(value = "pageNo") Integer pageNo,
-                                @RequestParam("sortField") String sortField,
-                                @RequestParam("sortDir") String sortDir,
-                                Model model) {
-        Integer visiblePages = 4;
+    public String findPaginated(Model model,
+                                @PathVariable(value = "pageNo") Integer pageNo,
+                                @RequestParam(value = "sortField", required = false, defaultValue = "firstName") String sortField,
+                                @RequestParam(value = "sortDir", required = false, defaultValue = "asc") String sortDir,
+                                @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
         Integer pageSize = 5;
 
-        Page<Employee> page = employeeService.findPaginated(pageNo, pageSize, sortField, sortDir);
+        Page<Employee> page = employeeService.findPaginated(pageNo, pageSize, sortField, sortDir, keyword);
         List<Employee> listEmployees = page.getContent();
 
-        model.addAttribute("visiblePages", visiblePages);
         model.addAttribute("currentPage", pageNo);
         model.addAttribute("totalPages", page.getTotalPages());
         model.addAttribute("totalItems", page.getTotalElements());
@@ -68,6 +67,8 @@ public class EmployeeController {
         model.addAttribute("sortField", sortField);
         model.addAttribute("sortDir", sortDir);
         model.addAttribute("reverseSortDir", sortDir.equals("asc") ?  "desc": "asc");
+
+        model.addAttribute("keyword", keyword);
 
         return "index";
     }
