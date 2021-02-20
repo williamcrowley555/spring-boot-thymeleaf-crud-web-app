@@ -39,23 +39,26 @@ public class EmployeeController {
 
     @PostMapping("/saveEmloyee")
     public String saveEmloyee(@ModelAttribute("employee") Employee employee,
-                              @RequestParam("imageFile") MultipartFile multipartFile) throws IOException {
+                              @RequestParam(value = "imageFile", required = false) MultipartFile multipartFile) throws IOException {
         String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
-        employee.setImage(fileName);
+        employee.setImage(fileName.isEmpty() ? null : fileName);
 
         Employee savedEmployee = employeeService.save(employee);
-        String uploadDir = "./images/employee-images/" + savedEmployee.getId();
-        Path uploadPath = Paths.get(uploadDir);
-        if(!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
 
-        try {
-            InputStream inputStream = multipartFile.getInputStream();
-            Path filePath = uploadPath.resolve(fileName);   // resolve = get file path
-            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new IOException("Could not save uploaded file " + fileName);
+        if(multipartFile.getSize() > 0) {
+            String uploadDir = "./images/employee-images/" + savedEmployee.getId();
+            Path uploadPath = Paths.get(uploadDir);
+            if(!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            try {
+                InputStream inputStream = multipartFile.getInputStream();
+                Path filePath = uploadPath.resolve(fileName);   // resolve = get file path
+                Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new IOException("Could not save uploaded file " + fileName);
+            }
         }
 
         return "redirect:/";
