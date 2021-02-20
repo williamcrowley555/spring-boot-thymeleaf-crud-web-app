@@ -2,6 +2,7 @@ package net.javaguides.springboot.controller;
 
 import net.javaguides.springboot.model.Employee;
 import net.javaguides.springboot.service.IEmployeeService;
+import net.javaguides.springboot.util.FileUploadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -47,18 +48,7 @@ public class EmployeeController {
 
         if(multipartFile.getSize() > 0) {
             String uploadDir = "./images/employee-images/" + savedEmployee.getId();
-            Path uploadPath = Paths.get(uploadDir);
-            if(!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            try {
-                InputStream inputStream = multipartFile.getInputStream();
-                Path filePath = uploadPath.resolve(fileName);   // resolve = get file path
-                Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                throw new IOException("Could not save uploaded file " + fileName);
-            }
+            FileUploadUtil.saveFile(multipartFile, uploadDir, fileName);
         }
 
         return "redirect:/";
