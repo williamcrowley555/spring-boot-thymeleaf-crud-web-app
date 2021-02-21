@@ -42,11 +42,22 @@ public class EmployeeController {
     public String saveEmloyee(@ModelAttribute("employee") Employee employee,
                               @RequestParam(value = "imageFile", required = false) MultipartFile multipartFile) throws IOException {
         String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
-        employee.setImage(fileName.isEmpty() ? null : fileName);
+        if (multipartFile.getSize() > 0) {
+            employee.setImage(fileName);
+        } else {
+//            Check update with no file upload
+            if(employee.getId() != null) {
+                fileName = employeeService.getEmployeeById(employee.getId()).getImage();
+//                Already has image or no image
+                if(fileName != null) {
+                    employee.setImage(fileName);
+                }
+            }
+        }
 
         Employee savedEmployee = employeeService.save(employee);
 
-        if(multipartFile.getSize() > 0) {
+        if (multipartFile.getSize() > 0) {
             String uploadDir = "./images/employee-images/" + savedEmployee.getId();
             FileUploadUtil.saveFile(multipartFile, uploadDir, fileName);
         }
