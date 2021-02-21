@@ -41,19 +41,11 @@ public class EmployeeController {
     @PostMapping("/saveEmloyee")
     public String saveEmloyee(@ModelAttribute("employee") Employee employee,
                               @RequestParam(value = "imageFile", required = false) MultipartFile multipartFile) throws IOException {
-        String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
-        if (multipartFile.getSize() > 0) {
-            employee.setImage(fileName);
-        } else {
-//            Check update with no file upload
-            if(employee.getId() != null) {
-                fileName = employeeService.getEmployeeById(employee.getId()).getImage();
-//                Already has image or no image
-                if(fileName != null) {
-                    employee.setImage(fileName);
-                }
-            }
-        }
+        String oldImage = employee.getId() != null ?
+                employeeService.getEmployeeById(employee.getId()).getImage()
+                : null;
+        String fileName = FileUploadUtil.renderImage(employee, oldImage, multipartFile);
+        employee.setImage(fileName);
 
         Employee savedEmployee = employeeService.save(employee);
 
